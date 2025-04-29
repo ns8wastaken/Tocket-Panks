@@ -1,27 +1,32 @@
+mod utils;
 mod raylib_bindings;
-use raylib_bindings::raylib;
+mod terrain;
 
-use std::ffi::CString;
+use utils::StaticCString;
+use raylib_bindings::raylib;
 
 fn main() {
     unsafe {
+        let title = StaticCString::new("Tocket Panks");
         raylib::InitWindow(
             800,
             800,
-            CString::new("Tocket Panks").unwrap().as_ptr()
+            title.ptr
         );
+
+        let terrain = terrain::generate_terrain(800, 200.0);
 
         while !raylib::WindowShouldClose() {
             raylib::BeginDrawing();
+            raylib::ClearBackground(raylib::Color::new(100, 100, 100, 255));
 
-            raylib::ClearBackground(raylib::Color { r: 255, g: 255, b: 255, a: 255 });
-            raylib::DrawText(
-                CString::new("Congrats! You created your first window!").unwrap().as_ptr(),
-                190,
-                200,
-                20,
-                raylib::Color { r: 150, g: 150, b: 150, a: 255 }
-            );
+            for (x, y) in terrain.iter().enumerate() {
+                raylib::DrawLineV(
+                    raylib::Vector2::new(x as f32, 800.0),
+                    raylib::Vector2::new(x as f32, 800.0 - *y as f32),
+                    raylib::Color::new(0, 255, 0, 255)
+                );
+            }
 
             raylib::EndDrawing();
         }
