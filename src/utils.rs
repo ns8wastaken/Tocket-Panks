@@ -1,4 +1,5 @@
-use std::ffi::CString;
+use std::ffi::{CString, c_char};
+use std::ptr;
 
 pub struct StaticCString {
     _c_string: CString,
@@ -10,5 +11,9 @@ impl StaticCString {
         let c_string = CString::new(s).unwrap();
         let ptr = c_string.as_ptr();
         Self { _c_string: c_string, ptr }
+    }
+
+    pub fn null() -> *const c_char {
+        ptr::null()
     }
 }

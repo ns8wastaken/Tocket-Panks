@@ -1,42 +1,49 @@
-use noise::{NoiseFn, Perlin};
 use rand::Rng;
 
-pub fn generate_terrain(width: usize, height_min: f64) -> Vec<f64> {
-    let mut rng = rand::rng();
-    let perlin = Perlin::new(rng.random());
-    let mut terrain = Vec::with_capacity(width);
-
-    let num_octaves = 4;
-    let persistence = 0.5;
-
-    for i in 0..width {
-        let t = i as f64 / (width - 1) as f64;
-        // let mountain = (1.0 - (2.0 * t - 1.0).abs()).powf(2.0);
-        // let mountain = 1.0 - (2.0 * t - 1.0).powf(2.0);
-        let mountain = 1.0 - (3.0 - 4.0 * (t - 0.5).abs()) * (2.0 * (t - 0.5)).powi(2);
-
-        let x = t * width as f64;
-
-        let mut noise = 0.0;
-        let mut freq = 0.005;
-        let mut amp = 1.0;
-        let mut max_amp = 0.0;
-
-        for _ in 0..num_octaves {
-            noise += perlin.get([x as f64 * freq]) * amp;
-            max_amp += amp;
-            freq *= 2.0;
-            amp *= persistence;
-        }
-
-        noise /= max_amp;
-        noise += mountain * 8.0;
-
-        let noise = (noise + 1.0) / 2.0;
-        let y = height_min + noise * 80.0;
-
-        terrain.push(y);
+fn displace(
+    terrain: &mut [f64],
+    left: usize,
+    right: usize,
+    displacement: f64,
+    roughness: f64,
+    rng: &mut impl rand::Rng,
+) {
+    if right - left <= 1 {
+        return;
     }
 
+    let mid = (left + right) / 2;
+    let avg = (terrain[left] + terrain[right]) / 2.0;
+    let offset = rng.random_range(-0.5..0.5) * displacement;
+
+    terrain[mid] = avg + offset;
+
+    displace(terrain, left, mid, displacement * roughness, roughness, rng);
+    displace(terrain, mid, right, displacement * roughness, roughness, rng);
+}
+
+// Midpoint displacement
+pub fn generate_terrain(width: usize, height_min: f64) -> Vec<f64> {
+    let roughness = 0.5;
+    let initial_displacement = width as f64 / 4.0;
+
+    let mut terrain = vec![0.0; width];
+
+    let mut rng = rand::rng();
+    terrain[0] = rng.random_range(0.0..initial_displacement);
+    terrain[width - 1] = rng.random_range(0.0..initial_displacement);
+
+    displace(
+        &mut terrain,
+        0,
+        width - 1,
+        initial_displacement,
+        roughness,
+        &mut rng,
+    );
+
     terrain
+        .iter()
+        .map(|x| x + height_min)
+        .collect()
 }

@@ -2,35 +2,63 @@ mod utils;
 mod raylib_bindings;
 mod terrain;
 
-use utils::StaticCString;
-use raylib_bindings::raylib;
+use raylib_bindings as raylib;
 
 fn main() {
-    unsafe {
-        let title = StaticCString::new("Tocket Panks");
-        raylib::InitWindow(
-            800,
-            800,
-            title.ptr
+    raylib::init_window(800, 800, "Tocket Panks");
+
+    let mut terrain = terrain::generate_terrain(800, 200.0);
+
+    let terrain_img = raylib::Image::new(
+        terrain.as_mut_ptr() as *mut _,
+        800,
+        1,
+        1,
+        raylib::PixelFormat::UncompressedGrayAlpha as i32
+    );
+    let terrain_tex = raylib::load_texture_from_image(terrain_img);
+
+    let shader = raylib::load_shader(
+        None,
+        Some("src/shaders/terrain.glsl")
+    );
+
+    raylib::set_shader_value_texture(
+        &shader,
+        raylib::get_shader_location(shader, "terrainTex"),
+        &terrain_tex
+    );
+
+    raylib::begin_shader_mode(&shader);
+    raylib::draw_rectangle_v(
+        raylib::Vector2::new(0.0, 0.0),
+        raylib::Vector2::new(800.0, 800.0),
+        raylib::Color::new(255, 255, 255, 255)
+    );
+    raylib::end_shader_mode();
+
+    while !raylib::window_should_close() {
+        raylib::begin_drawing();
+        raylib::clear_background(raylib::Color::new(100, 100, 100, 255));
+
+        // for (x, y) in terrain.iter().enumerate() {
+        //     raylib::DrawLineV(
+        //         raylib::Vector2::new(x as f32, 800.0),
+        //         raylib::Vector2::new(x as f32, 800.0 - *y as f32),
+        //         raylib::Color::new(0, 255, 0, 255)
+        //     );
+        // }
+
+        raylib::begin_shader_mode(&shader);
+        raylib::draw_rectangle_v(
+            raylib::Vector2::new(0.0, 0.0),
+            raylib::Vector2::new(800.0, 800.0),
+            raylib::Color::new(255, 255, 255, 255)
         );
+        raylib::end_shader_mode();
 
-        let terrain = terrain::generate_terrain(800, 200.0);
-
-        while !raylib::WindowShouldClose() {
-            raylib::BeginDrawing();
-            raylib::ClearBackground(raylib::Color::new(100, 100, 100, 255));
-
-            for (x, y) in terrain.iter().enumerate() {
-                raylib::DrawLineV(
-                    raylib::Vector2::new(x as f32, 800.0),
-                    raylib::Vector2::new(x as f32, 800.0 - *y as f32),
-                    raylib::Color::new(0, 255, 0, 255)
-                );
-            }
-
-            raylib::EndDrawing();
-        }
-
-        raylib::CloseWindow();
+        raylib::end_drawing();
     }
+
+    raylib::close_window();
 }
