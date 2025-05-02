@@ -6,31 +6,37 @@ use raylib_bindings as raylib;
 fn main() {
     raylib::init_window(800, 800, "Tocket Panks");
 
-    let terrain = terrain::generate_terrain(800, 200.0);
+    // let mut terrain = terrain::generate_terrain(800, 200.0);
+    let mut terrain: Vec<u8> = (0..800)
+        .map(|x| {
+            let fx = x as f32 / 800.0;
+            (fx.sin() * 127.0 + 128.0) as u8  // example: sine wave height map
+        })
+        .collect();
 
-    // let terrain_img = raylib::Image::new(
-    //     terrain,
-    //     800,
-    //     1,
-    //     1,
-    //     raylib::PixelFormat::UncompressedGrayAlpha.to_i32()
-    // );
-    let terrain_img = raylib::gen_image_color(
+    let terrain_img = raylib::Image::new(
+        &mut terrain,
         800,
         1,
-        &raylib::Color::new(0, 0, 0, 255)
+        1,
+        raylib::PixelFormat::UncompressedGrayscale
     );
     let terrain_tex = raylib::load_texture_from_image(&terrain_img);
 
-    let shader = raylib::load_shader(
+    let shader = raylib::Shader::load(
         None,
         Some("src/shaders/terrain.glsl")
     );
 
-    raylib::set_shader_value_texture(
-        &shader,
-        raylib::get_shader_location(&shader, "terrainTex"),
+    shader.set_texture(
+        shader.get_location("terrainTex"),
         &terrain_tex
+    );
+    let screen_height = 800.0f32;
+    shader.set_value(
+        shader.get_location("screenHeight"),
+        &screen_height as *const f32 as *const _,
+        raylib::ShaderUniformDataType::ShaderUniformFloat
     );
 
     raylib::begin_shader_mode(&shader);

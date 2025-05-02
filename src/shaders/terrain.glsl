@@ -10,11 +10,23 @@ out vec4 finalColor;
 
 void main() {
     float x = gl_FragCoord.x / float(textureSize(terrainTex, 0).x);
-    float terrainY = texture2D(terrainTex, vec2(x, 0)).r * screenHeight;
 
-    if (gl_FragCoord.y >= terrainY) {
-        discard;
+    float height = texture(terrainTex, vec2(x, 0)).r;
+    float terrainY = texture(terrainTex, vec2(x, 0)).r * screenHeight;
+
+    if (gl_FragCoord.y < height * 200.0) {
+        finalColor = vec4(0.0, 1.0, 0.0, 1.0);
     } else {
-        finalColor = vec4(0.2, 0.7, 0.3, 1.0);
+        discard;
     }
+    // if (terrainY >= 0.5) {
+    //     finalColor = vec4(1.0, 0.0, 0.0, 1.0);
+    // } else {
+    //     finalColor = vec4(0.0, 0.0, 1.0, 1.0);
+    // }
+    // if (gl_FragCoord.y >= terrainY) {
+    //     discard;
+    // } else {
+    //     finalColor = vec4(0.2, 0.7, 0.3, 1.0);
+    // }
 }

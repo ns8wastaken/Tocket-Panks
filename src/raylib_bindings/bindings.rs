@@ -31,6 +31,7 @@ unsafe extern "C" {
     pub fn EndShaderMode();
 
     pub fn LoadShader(vsFileName: *const c_char, fsFileName: *const c_char) -> Shader;
+    pub fn SetShaderValue(shader: Shader, locIndex: c_int, value: *const c_void, uniformType: c_int);
     pub fn SetShaderValueTexture(shader: Shader, locIndex: c_int, texture: Texture);
     pub fn GetShaderLocation(shader: Shader, uniformName: *const c_char) -> c_int;
 }
